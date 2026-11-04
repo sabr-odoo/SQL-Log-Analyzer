@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Odoo SQL Log Analyzer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap bar">
+    <div class="logo">⌁</div>
+    <div><h1>Odoo SQL Log Analyzer</h1><p>Runs locally. Your log never leaves this browser.</p></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <label id="drop" class="drop" for="logFile">
+      <span class="drop-icon">📄</span>
+      <strong id="fileName">Drop your log here or click to browse</strong>
+      <small id="fileMeta">.log · .txt · .sql</small>
+      <input id="logFile" type="file" accept=".log,.txt,.sql" hidden>
+    </label>
+
+    <div class="controls">
+      <label class="field">Model filter
+        <input id="modelFilter" list="modelList" type="text" placeholder="product.template, sale.order*  (empty = all)" autocomplete="off">
+        <datalist id="modelList"></datalist>
+      </label>
+      <label class="field small">Slow (ms)
+        <input id="threshold" type="number" min="1" value="500" placeholder="500">
+      </label>
+      <button id="clearFilter" class="secondary" type="button">Clear</button>
+      <button id="analyzeBtn" disabled>Analyze</button>
+    </div>
+    <div class="types" id="types">
+      <span class="types-label">Query type</span>
+      <label class="type"><input type="checkbox" data-type="select" checked> SELECT <em id="cnt-select">0</em></label>
+      <label class="type"><input type="checkbox" data-type="insert" checked> INSERT (create) <em id="cnt-insert">0</em></label>
+      <label class="type"><input type="checkbox" data-type="update" checked> UPDATE (write) <em id="cnt-update">0</em></label>
+      <label class="type"><input type="checkbox" data-type="delete" checked> DELETE (unlink) <em id="cnt-delete">0</em></label>
+    </div>
+    <p class="hint">Exact model match. Use <code>*</code> as wildcard (<code>sale.order*</code> includes sale.order.line). Separate several models with commas.</p>
+
+    <details>
+      <summary>How do I capture a log?</summary>
+      <ul>
+        <li>Odoo: start with <code>--log-level=debug_sql</code>, reproduce the slow action, save the log.</li>
+        <li>PostgreSQL: set <code>log_min_duration_statement = 100</code> and reload. This adds the <code>duration: … ms</code> values needed for timing checks.</li>
+        <li>Reproduce <b>one</b> slow action only, so the log stays focused.</li>
+      </ul>
+    </details>
+  </section>
+
+  <div id="status" role="status"></div>
+
+  <section id="results" hidden>
+    <div id="verdict" class="verdict"></div>
+    <div class="metrics" id="metrics"></div>
+
+    <nav class="tabs" id="tabs">
+      <button data-tab="p-findings" class="active">Findings</button>
+      <button data-tab="p-all">All queries</button>
+      <button data-tab="p-time">Time &amp; models</button>
+      <button data-tab="p-queries">Queries</button>
+      <button data-tab="p-indexes">Indexes</button>
+    </nav>
+
+    <div class="panel card" id="p-findings">
+      <div class="chips" id="chips">
+        <button data-sev="all" class="chip active">All</button>
+        <button data-sev="high" class="chip">High</button>
+        <button data-sev="medium" class="chip">Medium</button>
+        <button data-sev="low" class="chip">Low</button>
+      </div>
+      <div id="findings" class="list"></div>
+    </div>
+
+    <div class="panel card" id="p-all" hidden>
+      <div class="all-bar">
+        <input id="allSearch" type="text" placeholder="Search inside these queries (table, column, text…)" autocomplete="off">
+        <span id="allCount" class="hint"></span>
+      </div>
+      <div id="allList" class="list"></div>
+      <button id="allMore" class="secondary more" hidden>Show more</button>
+    </div>
+
+    <div class="panel card" id="p-time" hidden>
+      <h2>Where the time goes</h2>
+      <div id="timeList" class="list"></div>
+      <h2>Queries per model</h2>
+      <table id="modelTable"></table>
+    </div>
+
+    <div class="panel card" id="p-queries" hidden>
+      <h2>Slowest queries</h2><div id="slowList" class="list"></div>
+      <h2>Repeated queries (possible N+1)</h2><div id="repeatList" class="list"></div>
+      <h2>Back-to-back repetition</h2><div id="seqList" class="list"></div>
+      <h2>Heavy shapes (JOIN / GROUP BY / sorting)</h2><div id="heavyList" class="list"></div>
+    </div>
+
+    <div class="panel card" id="p-indexes" hidden>
+      <h2>Index investigation candidates</h2><div id="indexList" class="list"></div>
+    </div>
+
+    <div class="actions">
+      <button id="download" class="secondary">⬇ Download report</button>
+      <button id="copy" class="secondary">Copy summary</button>
+    </div>
+  </section>
+  <footer>v2.1 · Heuristic analysis. Confirm with the Odoo profiler and PostgreSQL EXPLAIN (ANALYZE, BUFFERS).</footer>
+</main>
+<script src="popup.js"></script>
+</body>
+</html>
