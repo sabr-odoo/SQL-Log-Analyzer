@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Odoo SQL Log Analyzer",
-  "version": "2.0.0",
+  "version": "2.4.0",
   "description": "Turn Odoo/PostgreSQL SQL logs into plain-language performance findings.",
   "action": { "default_title": "Open Odoo SQL Log Analyzer" },
   "background": { "service_worker": "background.js" }
